@@ -1,0 +1,315 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "6",
+  "dialect": "sqlite",
+  "tables": {
+    "phases": {
+      "name": "phases",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": false
+        },
+        "track_id": {
+          "autoincrement": false,
+          "name": "track_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "autoincrement": false,
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "autoincrement": false,
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "autoincrement": false,
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "week_start": {
+          "autoincrement": false,
+          "name": "week_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "week_end": {
+          "autoincrement": false,
+          "name": "week_end",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unlock_requires_phase_id": {
+          "autoincrement": false,
+          "name": "unlock_requires_phase_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {
+        "idx_phases_track": {
+          "name": "idx_phases_track",
+          "columns": [
+            "track_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "phases_unlock_requires_phase_id_phases_id_fk": {
+          "name": "phases_unlock_requires_phase_id_phases_id_fk",
+          "tableFrom": "phases",
+          "tableTo": "phases",
+          "columnsFrom": [
+            "unlock_requires_phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "phases_track_id_tracks_id_fk": {
+          "name": "phases_track_id_tracks_id_fk",
+          "tableFrom": "phases",
+          "tableTo": "tracks",
+          "columnsFrom": [
+            "track_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "resources_check_1": {
+          "name": "resources_check_1",
+          "value": "type IN ('book','blog','podcast','website','docs','video'"
+        },
+        "tasks_check_2": {
+          "name": "tasks_check_2",
+          "value": "cadence IN ('daily','weekly','end_of_phase'"
+        }
+      }
+    },
+    "resources": {
+      "name": "resources",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": false
+        },
+        "phase_id": {
+          "autoincrement": false,
+          "name": "phase_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "autoincrement": false,
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author": {
+          "autoincrement": false,
+          "name": "author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "autoincrement": false,
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "autoincrement": false,
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "autoincrement": false,
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort_order": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {
+        "resources_phase_id_phases_id_fk": {
+          "name": "resources_phase_id_phases_id_fk",
+          "tableFrom": "resources",
+          "tableTo": "phases",
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "resources_check_1": {
+          "name": "resources_check_1",
+          "value": "type IN ('book','blog','podcast','website','docs','video'"
+        },
+        "tasks_check_2": {
+          "name": "tasks_check_2",
+          "value": "cadence IN ('daily','weekly','end_of_phase'"
+        }
+      }
+    },
+    "tasks": {
+      "name": "tasks",
+      "columns": {
+        "id": {
+          "autoincrement": true,
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": false
+        },
+        "phase_id": {
+          "autoincrement": false,
+          "name": "phase_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "autoincrement": false,
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "autoincrement": false,
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cadence": {
+          "autoincrement": false,
+          "name": "cadence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_deliverable": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "is_deliverable",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {
+        "idx_tasks_phase": {
+          "name": "idx_tasks_phase",
+          "columns": [
+            "phase_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "tasks_phase_id_phases_id_fk": {
+          "name": "tasks_phase_id_phases_id_fk",
+          "tableFrom": "tasks",
+          "tableTo": "phases",
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "resources_check_1": {
+          "name": "resources_check_1",
+          "value": "type IN ('book','blog','podcast','website','docs','video'"
+        },
+        "tasks_check_2": {
+          "name": "tasks_check_2",
+          "value": "cadence IN ('daily','weekly','end_of_phase'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}
