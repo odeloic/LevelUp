@@ -5,6 +5,7 @@ import { apiError } from './response'
 export const ErrorCode = {
   PHASE_NOT_FOUND:    'PHASE_NOT_FOUND',
   TASK_NOT_FOUND:     'TASK_NOT_FOUND',
+  TRACK_NOT_FOUND:    'TRACK_NOT_FOUND',
   PHASE_LOCKED:       'PHASE_LOCKED',
   INVALID_BODY:       'INVALID_BODY',
   INVALID_PARAMS:     'INVALID_PARAMS',
