@@ -1,9 +1,10 @@
 import { defineConfig } from 'drizzle-kit'
 
 export default defineConfig({
-  dialect: 'sqlite',
+  dialect: 'turso',
   dbCredentials: {
-    url: './levelup.db',
+    url: process.env.TURSO_DB_URL ?? 'file:./levelup.db',
+    authToken: process.env.TURSO_AUTH_TOKEN,
   },
   schema: './server/db/migrations/schema.ts',
   out:    './server/db/migrations',

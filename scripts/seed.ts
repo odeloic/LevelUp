@@ -1,17 +1,15 @@
 /**
- * Initializes levelup.db from roadmap.sql if not already seeded.
- *
- * Safe to re-run: uses CREATE TABLE IF NOT EXISTS and INSERT OR IGNORE,
- * so it will never overwrite existing data.
+ * Initializes the DB from roadmap.sql if not already seeded.
+ * Works with both local file (dev) and remote Turso (prod).
  *
  * Usage: npx tsx scripts/seed.ts
  */
 
-import Database from 'better-sqlite3'
+import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
 import { readFileSync, existsSync } from 'fs'
 import { resolve } from 'path'
 
-const DB_PATH  = resolve(process.cwd(), 'levelup.db')
 const SQL_PATH = resolve(process.cwd(), 'roadmap.sql')
 
 if (!existsSync(SQL_PATH)) {
@@ -19,30 +17,37 @@ if (!existsSync(SQL_PATH)) {
   process.exit(1)
 }
 
-const db = new Database(DB_PATH)
-db.pragma('foreign_keys = ON')
-db.pragma('journal_mode = WAL')
+const client = createClient({
+  url: process.env.TURSO_DB_URL ?? 'file:./levelup.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
+})
 
-// Check if already seeded (tracks table exists and has rows)
-const alreadySeeded = db
-  .prepare(`SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='tracks'`)
-  .get() as { count: number }
+const db = drizzle(client)
 
-if (alreadySeeded.count > 0) {
-  const trackCount = db.prepare('SELECT COUNT(*) as count FROM tracks').get() as { count: number }
-  if (trackCount.count > 0) {
-    console.log(`[seed] DB already seeded (${trackCount.count} tracks found). Nothing to do.`)
-    db.close()
+// Check if already seeded
+const result = await client.execute(
+  `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='tracks'`
+)
+const tableExists = Number(result.rows[0].count) > 0
+
+if (tableExists) {
+  const rows = await client.execute('SELECT COUNT(*) as count FROM tracks')
+  const trackCount = Number(rows.rows[0].count)
+  if (trackCount > 0) {
+    console.log(`[seed] Already seeded (${trackCount} tracks). Nothing to do.`)
+    client.close()
     process.exit(0)
   }
 }
 
-console.log(`[seed] Initializing ${DB_PATH} from roadmap.sql...`)
+console.log(`[seed] Seeding from roadmap.sql...`)
 
 const sql = readFileSync(SQL_PATH, 'utf-8')
+  .split('\n')
+  .filter(line => !line.trimStart().toUpperCase().startsWith('PRAGMA'))
+  .join('\n')
 
-// db.exec() runs the full SQL file as-is — no manual statement splitting needed.
-db.exec(sql)
+await client.executeMultiple(sql)
 
 console.log(`[seed] Done.`)
-db.close()
+client.close()
