@@ -74,9 +74,20 @@ CREATE TABLE IF NOT EXISTS user_state (
   xp                  INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS idx_completions_task ON completions(task_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_phase      ON tasks(phase_id);
-CREATE INDEX IF NOT EXISTS idx_phases_track     ON phases(track_id);
+-- XP audit log — one row per XP-earning event
+CREATE TABLE IF NOT EXISTS xp_events (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_type  TEXT    NOT NULL CHECK(event_type IN ('daily','weekly','end_of_phase','deliverable','phase_unlock','streak_7_days')),
+  amount      INTEGER NOT NULL,
+  task_id     INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+  phase_id    INTEGER REFERENCES phases(id) ON DELETE SET NULL,
+  occurred_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_completions_task  ON completions(task_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_phase       ON tasks(phase_id);
+CREATE INDEX IF NOT EXISTS idx_phases_track      ON phases(track_id);
+CREATE INDEX IF NOT EXISTS idx_xp_events_occurred ON xp_events(occurred_at);
 
 -- ------------------------------------------------------------
 -- SEED: TRACKS

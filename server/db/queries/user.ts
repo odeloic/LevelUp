@@ -30,7 +30,20 @@ export async function getUserState() {
     throw new AppError(ErrorCode.USER_STATE_MISSING, 'User state could not be initialized', 500)
   }
 
-  return row
+  // Auto-compute current week from startedAt (source of truth)
+  const daysSinceStart = Math.floor(
+    (Date.now() - new Date(row.startedAt).getTime()) / 86_400_000,
+  )
+  const currentWeek = Math.min(12, Math.max(1, Math.ceil((daysSinceStart + 1) / 7)))
+
+  // Effective streak: show 0 if last activity was more than 1 day ago
+  const today     = new Date().toISOString().slice(0, 10)
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+  const effectiveStreak = (row.lastActiveDate === today || row.lastActiveDate === yesterday)
+    ? row.streakDays
+    : 0
+
+  return { ...row, currentWeek, effectiveStreak }
 }
 
 export async function updateUserState(patch: Partial<UpdateUserStateBody>) {

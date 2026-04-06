@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { phases, tracks, resources, tasks, completions } from "./schema";
+import { phases, tracks, resources, tasks, completions, xpEvents } from "./schema";
 
 export const phasesRelations = relations(phases, ({one, many}) => ({
 	phase: one(phases, {
@@ -41,5 +41,16 @@ export const completionsRelations = relations(completions, ({one}) => ({
 	task: one(tasks, {
 		fields: [completions.taskId],
 		references: [tasks.id]
+	}),
+}));
+
+export const xpEventsRelations = relations(xpEvents, ({one}) => ({
+	task: one(tasks, {
+		fields: [xpEvents.taskId],
+		references: [tasks.id]
+	}),
+	phase: one(phases, {
+		fields: [xpEvents.phaseId],
+		references: [phases.id]
 	}),
 }));

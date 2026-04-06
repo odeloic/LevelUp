@@ -9,12 +9,7 @@ export const tracks = sqliteTable("tracks", {
 	color: text().default("#6366f1").notNull(),
 	icon: text().default("🗺️").notNull(),
 	sortOrder: integer("sort_order").default(0).notNull(),
-},
-(table) => [
-	check("resources_check_1", sql`type IN ('book','blog','podcast','website','docs','video'`),
-	check("tasks_check_2", sql`cadence IN ('daily','weekly','end_of_phase'`),
-	check("user_state_check_3", sql`id = 1`),
-]);
+});
 
 export const phases = sqliteTable("phases", {
 	id: integer().primaryKey({ autoIncrement: true }),
@@ -34,9 +29,6 @@ export const phases = sqliteTable("phases", {
 			foreignColumns: [table.id],
 			name: "phases_unlock_requires_phase_id_phases_id_fk"
 		})).onDelete("set null"),
-	check("resources_check_1", sql`type IN ('book','blog','podcast','website','docs','video'`),
-	check("tasks_check_2", sql`cadence IN ('daily','weekly','end_of_phase'`),
-	check("user_state_check_3", sql`id = 1`),
 ]);
 
 export const resources = sqliteTable("resources", {
@@ -48,12 +40,7 @@ export const resources = sqliteTable("resources", {
 	url: text(),
 	description: text(),
 	sortOrder: integer("sort_order").default(0).notNull(),
-},
-(table) => [
-	check("resources_check_1", sql`type IN ('book','blog','podcast','website','docs','video'`),
-	check("tasks_check_2", sql`cadence IN ('daily','weekly','end_of_phase'`),
-	check("user_state_check_3", sql`id = 1`),
-]);
+});
 
 export const tasks = sqliteTable("tasks", {
 	id: integer().primaryKey({ autoIncrement: true }),
@@ -66,9 +53,6 @@ export const tasks = sqliteTable("tasks", {
 },
 (table) => [
 	index("idx_tasks_phase").on(table.phaseId),
-	check("resources_check_1", sql`type IN ('book','blog','podcast','website','docs','video'`),
-	check("tasks_check_2", sql`cadence IN ('daily','weekly','end_of_phase'`),
-	check("user_state_check_3", sql`id = 1`),
 ]);
 
 export const completions = sqliteTable("completions", {
@@ -76,28 +60,35 @@ export const completions = sqliteTable("completions", {
 	taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" } ),
 	weekNumber: integer("week_number"),
 	dayDate: text("day_date"),
-	completedAt: text("completed_at").default("sql`(datetime('now'))`").notNull(),
+	completedAt: text("completed_at").default(sql`(datetime('now'))`).notNull(),
 	prUrl: text("pr_url"),
 	notes: text(),
 },
 (table) => [
 	index("idx_completions_task").on(table.taskId),
-	check("resources_check_1", sql`type IN ('book','blog','podcast','website','docs','video'`),
-	check("tasks_check_2", sql`cadence IN ('daily','weekly','end_of_phase'`),
-	check("user_state_check_3", sql`id = 1`),
 ]);
 
 export const userState = sqliteTable("user_state", {
 	id: integer().primaryKey(),
 	currentWeek: integer("current_week").default(1).notNull(),
-	startedAt: text("started_at").default("sql`(date('now'))`").notNull(),
+	startedAt: text("started_at").default(sql`(date('now'))`).notNull(),
 	streakDays: integer("streak_days").default(0).notNull(),
 	lastActiveDate: text("last_active_date"),
 	xp: integer().default(0).notNull(),
 },
 (table) => [
-	check("resources_check_1", sql`type IN ('book','blog','podcast','website','docs','video'`),
-	check("tasks_check_2", sql`cadence IN ('daily','weekly','end_of_phase'`),
 	check("user_state_check_3", sql`id = 1`),
 ]);
 
+export const xpEvents = sqliteTable("xp_events", {
+	id: integer().primaryKey({ autoIncrement: true }),
+	eventType: text("event_type").notNull(),
+	amount: integer().notNull(),
+	taskId: integer("task_id").references(() => tasks.id, { onDelete: "set null" }),
+	phaseId: integer("phase_id").references(() => phases.id, { onDelete: "set null" }),
+	occurredAt: text("occurred_at").default(sql`(datetime('now'))`).notNull(),
+},
+(table) => [
+	index("idx_xp_events_occurred").on(table.occurredAt),
+	check("xp_events_event_type_check", sql`event_type IN ('daily','weekly','end_of_phase','deliverable','phase_unlock','streak_7_days')`),
+]);
