@@ -61,9 +61,14 @@ function openModal(task: typeof tasks.value[number]) {
 }
 
 const xpToast = ref<string | null>(null)
+const phaseUnlocked = ref(false)
 
-async function onLogged(xpAwarded: number, phasesUnlocked: boolean) {
-  xpToast.value = `+${xpAwarded} XP${phasesUnlocked ? ' · Phase unlocked!' : ''}`
+async function onLogged(xpAwarded: number, newlyUnlockedPhaseIds: number[]) {
+  xpToast.value = `+${xpAwarded} XP`
+  if (newlyUnlockedPhaseIds.length > 0) {
+    phaseUnlocked.value = true
+    setTimeout(() => (phaseUnlocked.value = false), 4000)
+  }
   setTimeout(() => (xpToast.value = null), 3000)
   await refresh()
 }
@@ -84,38 +89,41 @@ useHead({ title: phase.value ? `${phase.value.title} — LevelUp` : 'Phase — L
     >
       <div
         v-if="xpToast"
-        class="fixed top-4 right-4 z-50 bg-zinc-900 text-white text-sm px-4 py-2 rounded shadow"
+        class="fixed top-4 right-4 z-50 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm px-4 py-2 rounded shadow"
       >
         {{ xpToast }}
       </div>
     </Transition>
 
+    <!-- Phase unlock toast -->
+    <PhaseUnlockToast :show="phaseUnlocked" />
+
     <!-- Breadcrumb + header -->
     <div class="mb-8">
-      <div class="flex items-center gap-2 text-xs text-zinc-400 mb-2">
-        <NuxtLink to="/" class="hover:text-zinc-600">Dashboard</NuxtLink>
+      <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-2">
+        <NuxtLink to="/" class="hover:text-zinc-600 dark:hover:text-zinc-300">Dashboard</NuxtLink>
         <span>/</span>
-        <NuxtLink :to="`/tracks/${phase.trackSlug}`" class="hover:text-zinc-600">{{ phase.trackTitle }}</NuxtLink>
+        <NuxtLink :to="`/tracks/${phase.trackSlug}`" class="hover:text-zinc-600 dark:hover:text-zinc-300">{{ phase.trackTitle }}</NuxtLink>
         <span>/</span>
-        <span class="text-zinc-600">{{ phase.title }}</span>
+        <span class="text-zinc-600 dark:text-zinc-400">{{ phase.title }}</span>
       </div>
-      <h1 class="text-xl font-semibold text-zinc-900">{{ phase.title }}</h1>
-      <p v-if="phase.description" class="text-sm text-zinc-500 mt-1">{{ phase.description }}</p>
-      <p class="text-xs text-zinc-400 mt-1">Weeks {{ phase.weekStart }}–{{ phase.weekEnd }}</p>
+      <h1 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{{ phase.title }}</h1>
+      <p v-if="phase.description" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{{ phase.description }}</p>
+      <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Weeks {{ phase.weekStart }}–{{ phase.weekEnd }}</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Tasks (2/3 width) -->
       <div class="lg:col-span-2">
         <!-- Tab bar -->
-        <div class="flex gap-1 border-b border-zinc-200 mb-5">
+        <div class="flex gap-1 border-b border-zinc-200 dark:border-zinc-800 mb-5">
           <button
             v-for="tab in (['daily', 'weekly', 'deliverables'] as const)"
             :key="tab"
             class="px-4 py-2 text-sm border-b-2 -mb-px transition-colors capitalize"
             :class="activeTab === tab
-              ? 'border-zinc-900 text-zinc-900 font-medium'
-              : 'border-transparent text-zinc-500 hover:text-zinc-700'"
+              ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 font-medium'
+              : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'"
             @click="activeTab = tab"
           >
             {{ tab === 'deliverables' ? 'Deliverables' : tab.charAt(0).toUpperCase() + tab.slice(1) }}
@@ -125,55 +133,61 @@ useHead({ title: phase.value ? `${phase.value.title} — LevelUp` : 'Phase — L
         <!-- Task list -->
         <div class="space-y-2">
           <template v-if="activeTab === 'daily'">
-            <div v-if="dailyTasks.length === 0" class="text-sm text-zinc-400">No daily tasks.</div>
+            <div v-if="dailyTasks.length === 0" class="py-8 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg text-center">
+              <p class="text-sm text-zinc-400 dark:text-zinc-500">No daily tasks in this phase.</p>
+            </div>
             <div
               v-for="task in dailyTasks"
               :key="task.id"
-              class="flex items-center justify-between border border-zinc-100 rounded-lg px-4 py-3 hover:border-zinc-200 transition-colors"
+              class="flex items-center justify-between border border-zinc-100 dark:border-zinc-800 rounded-lg px-4 py-3 hover:border-zinc-200 dark:hover:border-zinc-700 transition-colors"
             >
               <div>
-                <p class="text-sm text-zinc-800">{{ task.title }}</p>
-                <p v-if="task.description" class="text-xs text-zinc-400 mt-0.5">{{ task.description }}</p>
+                <p class="text-sm text-zinc-800 dark:text-zinc-200">{{ task.title }}</p>
+                <p v-if="task.description" class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{{ task.description }}</p>
               </div>
               <button
-                class="ml-4 flex-shrink-0 text-xs font-medium text-zinc-600 border border-zinc-200 rounded px-3 py-1 hover:border-zinc-400 hover:text-zinc-900 transition-colors"
+                class="ml-4 flex-shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                 @click="openModal(task)"
               >Log</button>
             </div>
           </template>
 
           <template v-if="activeTab === 'weekly'">
-            <div v-if="weeklyTasks.length === 0" class="text-sm text-zinc-400">No weekly tasks.</div>
+            <div v-if="weeklyTasks.length === 0" class="py-8 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg text-center">
+              <p class="text-sm text-zinc-400 dark:text-zinc-500">No weekly tasks in this phase.</p>
+            </div>
             <div
               v-for="task in weeklyTasks"
               :key="task.id"
-              class="flex items-center justify-between border border-zinc-100 rounded-lg px-4 py-3 hover:border-zinc-200 transition-colors"
+              class="flex items-center justify-between border border-zinc-100 dark:border-zinc-800 rounded-lg px-4 py-3 hover:border-zinc-200 dark:hover:border-zinc-700 transition-colors"
             >
               <div>
-                <p class="text-sm text-zinc-800">{{ task.title }}</p>
-                <p v-if="task.description" class="text-xs text-zinc-400 mt-0.5">{{ task.description }}</p>
+                <p class="text-sm text-zinc-800 dark:text-zinc-200">{{ task.title }}</p>
+                <p v-if="task.description" class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{{ task.description }}</p>
               </div>
               <button
-                class="ml-4 flex-shrink-0 text-xs font-medium text-zinc-600 border border-zinc-200 rounded px-3 py-1 hover:border-zinc-400 hover:text-zinc-900 transition-colors"
+                class="ml-4 flex-shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                 @click="openModal(task)"
               >Log</button>
             </div>
           </template>
 
           <template v-if="activeTab === 'deliverables'">
-            <div v-if="deliverables.length === 0" class="text-sm text-zinc-400">No deliverables.</div>
+            <div v-if="deliverables.length === 0" class="py-8 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg text-center">
+              <p class="text-sm text-zinc-400 dark:text-zinc-500">No deliverables in this phase.</p>
+            </div>
             <div
               v-for="task in deliverables"
               :key="task.id"
-              class="flex items-center justify-between border border-zinc-100 rounded-lg px-4 py-3 hover:border-zinc-200 transition-colors"
+              class="flex items-center justify-between border border-zinc-100 dark:border-zinc-800 rounded-lg px-4 py-3 hover:border-zinc-200 dark:hover:border-zinc-700 transition-colors"
             >
               <div>
-                <p class="text-sm text-zinc-800">{{ task.title }}</p>
-                <p v-if="task.description" class="text-xs text-zinc-400 mt-0.5">{{ task.description }}</p>
-                <p class="text-xs text-amber-600 mt-0.5">Requires PR URL</p>
+                <p class="text-sm text-zinc-800 dark:text-zinc-200">{{ task.title }}</p>
+                <p v-if="task.description" class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{{ task.description }}</p>
+                <p class="text-xs text-amber-600 dark:text-amber-500 mt-0.5">Requires PR URL</p>
               </div>
               <button
-                class="ml-4 flex-shrink-0 text-xs font-medium text-zinc-600 border border-zinc-200 rounded px-3 py-1 hover:border-zinc-400 hover:text-zinc-900 transition-colors"
+                class="ml-4 flex-shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                 @click="openModal(task)"
               >Log</button>
             </div>
@@ -183,11 +197,13 @@ useHead({ title: phase.value ? `${phase.value.title} — LevelUp` : 'Phase — L
 
       <!-- Resources panel (1/3 width) -->
       <div>
-        <h2 class="text-sm font-semibold text-zinc-700 mb-4">Resources</h2>
-        <div v-if="resources.length === 0" class="text-sm text-zinc-400">No resources for this phase.</div>
+        <h2 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4">Resources</h2>
+        <div v-if="resources.length === 0" class="py-6 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg text-center">
+          <p class="text-sm text-zinc-400 dark:text-zinc-500">No resources for this phase yet.</p>
+        </div>
         <div v-else class="space-y-5">
           <div v-for="(items, type) in resourcesByType" :key="type">
-            <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">{{ typeLabel[type] ?? type }}</p>
+            <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">{{ typeLabel[type] ?? type }}</p>
             <ul class="space-y-2">
               <li v-for="r in items" :key="r.id">
                 <a
@@ -197,13 +213,13 @@ useHead({ title: phase.value ? `${phase.value.title} — LevelUp` : 'Phase — L
                   rel="noopener noreferrer"
                   class="group block"
                 >
-                  <p class="text-sm text-zinc-800 group-hover:underline">{{ r.title }}</p>
-                  <p v-if="r.author" class="text-xs text-zinc-400">{{ r.author }}</p>
-                  <p v-if="r.description" class="text-xs text-zinc-400 mt-0.5">{{ r.description }}</p>
+                  <p class="text-sm text-zinc-800 dark:text-zinc-200 group-hover:underline">{{ r.title }}</p>
+                  <p v-if="r.author" class="text-xs text-zinc-400 dark:text-zinc-500">{{ r.author }}</p>
+                  <p v-if="r.description" class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{{ r.description }}</p>
                 </a>
                 <div v-else>
-                  <p class="text-sm text-zinc-800">{{ r.title }}</p>
-                  <p v-if="r.author" class="text-xs text-zinc-400">{{ r.author }}</p>
+                  <p class="text-sm text-zinc-800 dark:text-zinc-200">{{ r.title }}</p>
+                  <p v-if="r.author" class="text-xs text-zinc-400 dark:text-zinc-500">{{ r.author }}</p>
                 </div>
               </li>
             </ul>
@@ -220,5 +236,5 @@ useHead({ title: phase.value ? `${phase.value.title} — LevelUp` : 'Phase — L
     />
   </div>
 
-  <div v-else class="text-sm text-zinc-400">Phase not found.</div>
+  <div v-else class="text-sm text-zinc-400 dark:text-zinc-500">Phase not found.</div>
 </template>

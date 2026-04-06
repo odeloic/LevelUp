@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  logged: [xpAwarded: number, phasesUnlocked: boolean]
+  logged: [xpAwarded: number, newlyUnlockedPhaseIds: number[]]
 }>()
 
 const { logCompletion, loading, error } = useCompletion()
@@ -52,8 +52,8 @@ async function submit() {
 
   const res = await logCompletion(payload as Parameters<typeof logCompletion>[0])
   if (res?.ok) {
-    const afterStates = (res as { ok: true; data: { xpAwarded: number } }).data
-    emit('logged', afterStates.xpAwarded, afterStates.xpAwarded >= 100)
+    const { xpAwarded, newlyUnlockedPhaseIds } = (res as { ok: true; data: { xpAwarded: number; newlyUnlockedPhaseIds: number[] } }).data
+    emit('logged', xpAwarded, newlyUnlockedPhaseIds ?? [])
     emit('close')
   }
 }
@@ -78,20 +78,20 @@ function onBackdropClick(e: MouseEvent) {
         class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 px-4 pb-4 sm:pb-0"
         @click="onBackdropClick"
       >
-        <div class="w-full max-w-md bg-white border border-zinc-200 rounded-lg shadow-sm">
+        <div class="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm">
           <!-- Header -->
-          <div class="px-5 pt-5 pb-4 border-b border-zinc-100">
+          <div class="px-5 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <p class="text-xs text-zinc-400 uppercase tracking-wider mb-1">
+                <p class="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                   {{ task.cadence.replace('_', ' ') }}
                   <span v-if="isDeliverable" class="ml-1 text-amber-600">· deliverable</span>
                 </p>
-                <h2 class="text-base font-medium text-zinc-900 leading-snug">{{ task.title }}</h2>
-                <p v-if="task.description" class="text-sm text-zinc-500 mt-1">{{ task.description }}</p>
+                <h2 class="text-base font-medium text-zinc-900 dark:text-zinc-100 leading-snug">{{ task.title }}</h2>
+                <p v-if="task.description" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{{ task.description }}</p>
               </div>
               <button
-                class="text-zinc-400 hover:text-zinc-600 mt-0.5 flex-shrink-0"
+                class="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 mt-0.5 flex-shrink-0"
                 @click="emit('close')"
                 aria-label="Close"
               >
@@ -106,37 +106,37 @@ function onBackdropClick(e: MouseEvent) {
           <div class="px-5 py-4 space-y-4">
             <!-- PR URL -->
             <div>
-              <label class="block text-xs font-medium text-zinc-700 mb-1.5">
+              <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                 PR / Link URL
                 <span v-if="isDeliverable" class="text-red-500 ml-0.5">*</span>
-                <span v-else class="text-zinc-400 font-normal ml-1">(optional)</span>
+                <span v-else class="text-zinc-400 dark:text-zinc-500 font-normal ml-1">(optional)</span>
               </label>
               <input
                 v-model="prUrl"
                 type="url"
                 placeholder="https://github.com/..."
-                class="w-full text-sm border border-zinc-200 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-zinc-400 placeholder:text-zinc-300"
+                class="w-full text-sm border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
               />
             </div>
 
             <!-- Notes -->
             <div>
-              <label class="block text-xs font-medium text-zinc-700 mb-1.5">
+              <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                 Notes
-                <span class="text-zinc-400 font-normal ml-1">(optional · max 2000 chars)</span>
+                <span class="text-zinc-400 dark:text-zinc-500 font-normal ml-1">(optional · max 2000 chars)</span>
               </label>
               <textarea
                 v-model="notes"
                 rows="4"
                 maxlength="2000"
                 placeholder="What did you learn? Any blockers?"
-                class="w-full text-sm border border-zinc-200 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-zinc-400 placeholder:text-zinc-300 resize-none font-mono"
+                class="w-full text-sm border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 resize-none font-mono bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
               />
-              <p class="text-right text-xs text-zinc-400 mt-1">{{ notes.length }} / 2000</p>
+              <p class="text-right text-xs text-zinc-400 dark:text-zinc-500 mt-1">{{ notes.length }} / 2000</p>
             </div>
 
             <!-- Errors -->
-            <p v-if="validationError || error" class="text-sm text-red-600">
+            <p v-if="validationError || error" class="text-sm text-red-600 dark:text-red-400">
               {{ validationError ?? error }}
             </p>
           </div>
@@ -144,7 +144,7 @@ function onBackdropClick(e: MouseEvent) {
           <!-- Footer -->
           <div class="px-5 pb-5">
             <button
-              class="w-full bg-zinc-900 text-white text-sm font-medium py-2 rounded hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              class="w-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium py-2 rounded hover:bg-zinc-700 dark:hover:bg-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               :disabled="loading"
               @click="submit"
             >

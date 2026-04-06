@@ -8,6 +8,20 @@
       "when": 1775387398817,
       "tag": "0000_large_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1775501355616,
+      "tag": "0001_add_xp_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1775501449789,
+      "tag": "0002_add_xp_events",
+      "breakpoints": true
     }
   ]
 }

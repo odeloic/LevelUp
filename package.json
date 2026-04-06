@@ -9,6 +9,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "db:seed": "node --env-file=.env --import=tsx/esm scripts/seed.ts",
+    "db:migrate": "node --env-file=.env --import=tsx/esm scripts/add-xp-events.ts",
     "db:introspect": "drizzle-kit introspect"
   },
   "dependencies": {
