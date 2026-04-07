@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Personal career roadmap tracker with gamification (XP, streaks, phase unlocks). Nuxt 4 + Drizzle ORM + Turso (libsql/SQLite).
+Personal career roadmap tracker with gamification (XP, phase unlocks) and email reminders. Nuxt 4 + Drizzle ORM + Turso (libsql/SQLite).
 
 ## Commands
 
@@ -14,6 +14,7 @@ npm run build          # Production build
 npm run preview        # Preview production build
 npm run db:seed        # Initialize DB from roadmap.sql (idempotent)
 npm run db:migrate     # Run migration scripts (e.g., add-xp-events)
+npm run db:migrate:remove-streaks  # Remove streaks, add reminder columns
 npm run db:introspect  # Regenerate server/db/migrations/schema.ts from DB
 rm levelup.db && npm run db:seed   # Reset local DB
 ```
@@ -23,6 +24,9 @@ rm levelup.db && npm run db:seed   # Reset local DB
 ```env
 TURSO_DB_URL=libsql://...   # omit for local dev (falls back to file:./levelup.db)
 TURSO_AUTH_TOKEN=...        # omit for local dev
+RESEND_API_KEY=re_...       # Resend email API key (for reminders)
+REMINDER_EMAIL_TO=you@...   # Email address for reminder notifications
+CRON_SECRET=...             # Vercel cron secret (auto-sent as Authorization: Bearer header)
 ```
 
 ## Architecture
@@ -52,10 +56,11 @@ TURSO_AUTH_TOKEN=...        # omit for local dev
 | GET | `/api/phases?all=true` | List phases (include locked with `?all=true`) |
 | GET | `/api/phases/:id/tasks` | Tasks for a phase |
 | POST | `/api/completions` | Log a task completion (also logs XP events) |
-| GET | `/api/user/state` | Current user state (XP, streak, week) |
+| GET | `/api/user/state` | Current user state (XP, completions, week) |
 | PATCH | `/api/user/state` | Update user state (start date, etc.) |
 | GET | `/api/xp-events` | XP history (default 50 entries) |
 | GET | `/api/tasks/today` | Single pending daily task (for quick-log) |
+| GET | `/api/cron/check-reminders?secret=X` | Trigger inactivity email reminders |
 
 All routes return `ApiResponse<T>`:
 ```ts
@@ -98,6 +103,6 @@ completedAt: new Date().toISOString()
 
 **Phase unlocks**: A phase unlocks when `unlock_requires_phase_id IS NULL` OR all `is_deliverable=1` tasks in the required parent phase have a completion with `pr_url IS NOT NULL OR notes IS NOT NULL`.
 
-**XP values**: daily=+5, weekly=+15, deliverable/end_of_phase=+50, phase_unlock=+100, 7-day streak=+75. Deliverables add +50 bonus on top of cadence XP.
+**XP values**: daily=+5, weekly=+15, deliverable/end_of_phase=+50, phase_unlock=+100. Deliverables add +50 bonus on top of cadence XP.
 
-**Streaks**: `effectiveStreak` shows 0 if last activity was >1 day ago (prevents stale display). Streak bonus triggers every 7 consecutive days.
+**Email reminders**: Triggered via `GET /api/cron/check-reminders?secret=CRON_SECRET` (hit daily by external cron). Escalating nudges: gentle at 3 days inactive, urgent at 7 days. Resets when user logs a completion. Uses Resend API.

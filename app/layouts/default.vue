@@ -60,14 +60,14 @@ async function onQuickLogged(_xpAwarded: number, _newlyUnlockedPhaseIds: number[
           <div v-if="userState?.ok" class="hidden sm:flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
             <span>Week {{ userState.data.currentWeek }} / 12</span>
             <span class="text-zinc-300 dark:text-zinc-700">|</span>
-            <span>{{ userState.data.effectiveStreak }}d streak</span>
+            <span>{{ userState.data.totalCompletions }} done</span>
             <span class="text-zinc-300 dark:text-zinc-700">|</span>
             <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ userState.data.xp }} XP</span>
           </div>
           <div v-if="userState?.ok" class="flex sm:hidden items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
             <span>W{{ userState.data.currentWeek }}</span>
             <span>·</span>
-            <span>{{ userState.data.effectiveStreak }}🔥</span>
+            <span>{{ userState.data.totalCompletions }}✓</span>
             <span>·</span>
             <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ userState.data.xp }}XP</span>
           </div>

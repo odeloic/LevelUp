@@ -40,7 +40,7 @@ function formatEventType(type: string) {
     end_of_phase:  'Phase task',
     deliverable:   'Deliverable',
     phase_unlock:  'Phase unlock',
-    streak_7_days: '7-day streak',
+    streak_7_days: 'Streak bonus (retired)',
   }
   return labels[type] ?? type
 }

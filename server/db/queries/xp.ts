@@ -7,7 +7,6 @@ export const XP_VALUES = {
   weekly:        15,
   end_of_phase:  50,
   phase_unlock:  100,
-  streak_7_days: 75,
 } as const
 
 export function calcCompletionXp(
@@ -18,12 +17,8 @@ export function calcCompletionXp(
   return XP_VALUES[cadence] + (isDeliverable === 1 ? XP_VALUES.end_of_phase : 0)
 }
 
-export function calcStreakBonus(streakDays: number): number {
-  return streakDays > 0 && streakDays % 7 === 0 ? XP_VALUES.streak_7_days : 0
-}
-
 export async function logXpEvent(event: {
-  eventType: 'daily' | 'weekly' | 'end_of_phase' | 'deliverable' | 'phase_unlock' | 'streak_7_days'
+  eventType: 'daily' | 'weekly' | 'end_of_phase' | 'deliverable' | 'phase_unlock'
   amount: number
   taskId?: number | null
   phaseId?: number | null

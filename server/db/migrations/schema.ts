@@ -72,9 +72,10 @@ export const userState = sqliteTable("user_state", {
 	id: integer().primaryKey(),
 	currentWeek: integer("current_week").default(1).notNull(),
 	startedAt: text("started_at").default(sql`(date('now'))`).notNull(),
-	streakDays: integer("streak_days").default(0).notNull(),
 	lastActiveDate: text("last_active_date"),
 	xp: integer().default(0).notNull(),
+	lastReminderSent: text("last_reminder_sent"),
+	reminderLevel: integer("reminder_level").default(0).notNull(),
 },
 (table) => [
 	check("user_state_check_3", sql`id = 1`),
@@ -90,5 +91,5 @@ export const xpEvents = sqliteTable("xp_events", {
 },
 (table) => [
 	index("idx_xp_events_occurred").on(table.occurredAt),
-	check("xp_events_event_type_check", sql`event_type IN ('daily','weekly','end_of_phase','deliverable','phase_unlock','streak_7_days')`),
+	check("xp_events_event_type_check", sql`event_type IN ('daily','weekly','end_of_phase','deliverable','phase_unlock')`),
 ]);

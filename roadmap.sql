@@ -69,15 +69,16 @@ CREATE TABLE IF NOT EXISTS user_state (
   id                  INTEGER PRIMARY KEY CHECK(id = 1),
   current_week        INTEGER NOT NULL DEFAULT 1,
   started_at          TEXT    NOT NULL DEFAULT (date('now')),
-  streak_days         INTEGER NOT NULL DEFAULT 0,
   last_active_date    TEXT,
-  xp                  INTEGER NOT NULL DEFAULT 0
+  xp                  INTEGER NOT NULL DEFAULT 0,
+  last_reminder_sent  TEXT,
+  reminder_level      INTEGER NOT NULL DEFAULT 0
 );
 
 -- XP audit log — one row per XP-earning event
 CREATE TABLE IF NOT EXISTS xp_events (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  event_type  TEXT    NOT NULL CHECK(event_type IN ('daily','weekly','end_of_phase','deliverable','phase_unlock','streak_7_days')),
+  event_type  TEXT    NOT NULL CHECK(event_type IN ('daily','weekly','end_of_phase','deliverable','phase_unlock')),
   amount      INTEGER NOT NULL,
   task_id     INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
   phase_id    INTEGER REFERENCES phases(id) ON DELETE SET NULL,
@@ -389,5 +390,5 @@ INSERT INTO tasks (phase_id, title, description, cadence, is_deliverable, sort_o
 -- SEED: INITIAL USER STATE
 -- ------------------------------------------------------------
 
-INSERT OR IGNORE INTO user_state (id, current_week, started_at, streak_days, xp)
+INSERT OR IGNORE INTO user_state (id, current_week, started_at, xp, reminder_level)
 VALUES (1, 1, date('now'), 0, 0);

@@ -141,7 +141,7 @@ async function onLogged(xpAwarded: number, newlyUnlockedPhaseIds: number[]) {
 
       <div v-if="quickLogTasks.length === 0" class="py-8 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg text-center">
         <p class="text-sm text-zinc-400 dark:text-zinc-500">All daily tasks logged for today.</p>
-        <p class="text-xs text-zinc-300 dark:text-zinc-600 mt-1">Check back tomorrow to keep your streak going.</p>
+        <p class="text-xs text-zinc-300 dark:text-zinc-600 mt-1">Nice work for today.</p>
       </div>
 
       <div v-else class="divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
